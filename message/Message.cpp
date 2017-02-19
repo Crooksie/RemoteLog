@@ -3,9 +3,10 @@
 //
 
 #include <sstream>
+#include <iostream>
 #include "Message.h"
 
-Message::Message(int pid, const std::string &message) : pid(pid), message(message) {}
+Message::Message(int pid, const std::string &message) : pid(pid), message(message) { }
 
 int Message::getPid() const {
     return pid;
@@ -18,10 +19,8 @@ const std::string &Message::getMessage() const {
 std::string Message::serialise() const {
     std::stringstream stringstream;
     stringstream << pid;
-    stringstream << message;
-    std::string data;
-    stringstream >> data;
-    return data;
+    stringstream.write(message.data(), message.size());
+    return stringstream.str();
 }
 
 Message Message::deserialise(const std::string &message) {
@@ -29,6 +28,6 @@ Message Message::deserialise(const std::string &message) {
     int pid;
     stringstream >> pid;
     std::string msg;
-    stringstream >> msg;
+    std::getline(stringstream, msg);
     return Message(pid, msg);
 }

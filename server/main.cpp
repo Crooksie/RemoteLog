@@ -32,24 +32,7 @@ int main (void)
         std::cout << " \033[37;40m " << message.getMessage() << std::endl;
 
     }
-
-
-
-
-//    unsigned int current = 1;
-//    std::stringstream input;
-//    while (input << std::cin) {
-//        std::cout << "Client Sending" << std::endl;
-//        char buf[100] = {0};
-//        std::string text;
-//        input >> text;
-//        socket.send(text.data(), text.size());
-//
-//
-//        //  Do some 'work'
-//        sleep(1);
-//    }
-
+    return 0;
 }
 
 
