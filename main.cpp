@@ -1,58 +1,58 @@
-//#include <iostream>
-//
-//int main() {
-//    std::cout << "Hello, World!" << std::endl;
-//    return 0;
-//}
+#include <zmq.hpp>
 
-//
-//  Demonstrate identities as used by the request-reply pattern.  Run this
-//  program by itself.
-//
-// Olivier Chamoux <olivier.chamoux@fr.thalesgroup.com>
-#include <zmq.h>
-//  Synchronized publisher
+#include <iostream>
+#include <thread>
 
-#include "zhelpers.h"
-#define SUBSCRIBERS_EXPECTED  10  //  We wait for 10 subscribers
+#include <unistd.h>
+
+
+void server()
+{
+    std::cout << "Starting Server" << std::endl;
+
+    //  Prepare our context and socket
+    zmq::context_t context (1);
+    zmq::socket_t socket (context, ZMQ_PULL);
+    socket.bind ("ipc://localhost:4444");
+    while (true) {
+//        std::cout << "Server waiting for message" << std::endl;
+        char buf[100];
+        socket.recv (buf, 100);
+        std::cout << "Server received: " << buf << std::endl;
+
+    }
+}
+
+
+void client()
+{
+    std::cout << "Starting Client" << std::endl;
+    //  Prepare our context and socket
+    zmq::context_t context (1);
+    zmq::socket_t socket (context, ZMQ_PUSH);
+    socket.connect ("ipc://localhost:4444");
+
+    unsigned int current = 1;
+
+    while (true) {
+//        std::cout << "Client Sending" << std::endl;
+        char buf[100] = {0};
+        const auto len = sprintf(buf, "Hello %d", current++);
+        socket.send (buf, len);
+
+        //  Do some 'work'
+        sleep(1);
+    }
+}
 
 int main (void)
 {
-    void *context = zmq_ctx_new ();
+    std::thread serverThread(server);
+    std::thread clientThread(client);
 
-    //  Socket to talk to clients
-    void *publisher = zmq_socket (context, ZMQ_PUB);
 
-    int sndhwm = 1100000;
-    zmq_setsockopt (publisher, ZMQ_SNDHWM, &sndhwm, sizeof (int));
-
-    zmq_bind (publisher, "ipc://*:5561");
-
-    //  Socket to receive signals
-    void *syncservice = zmq_socket (context, ZMQ_REP);
-    zmq_bind (syncservice, "ipc://*:5562");
-
-    //  Get synchronization from subscribers
-    printf ("Waiting for subscribers\n");
-    int subscribers = 0;
-    while (subscribers < SUBSCRIBERS_EXPECTED) {
-        //  - wait for synchronization request
-        char *string = s_recv (syncservice);
-        free (string);
-        //  - send synchronization reply
-        s_send (syncservice, "");
-        subscribers++;
-    }
-    //  Now broadcast exactly 1M updates followed by END
-    printf ("Broadcasting messages\n");
-    int update_nbr;
-    for (update_nbr = 0; update_nbr < 1000000; update_nbr++)
-        s_send (publisher, "Rhubarb");
-
-    s_send (publisher, "END");
-
-    zmq_close (publisher);
-    zmq_close (syncservice);
-    zmq_ctx_destroy (context);
+    sleep(20);
     return 0;
 }
+
+
